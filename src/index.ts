@@ -1,10 +1,11 @@
+import Evaluator from './evaluator/Evaluator';
 import Parser from './parser/Parser';
 import Tokenizer from './token/Tokenizer';
 
-const tokenizer = new Tokenizer('<Hi! How are you? != Yes + no + <he died = times of the lynx + <bye - bye>>>');
-const tokens = tokenizer.createTokens();
-console.log(tokens.map(v => v.toString()).join(''));
+export default function parse(code: string): string {
+  const tokens = new Tokenizer(code).createTokens();
+  const ast = new Parser(tokens).parse();
+  return new Evaluator(ast).evaluate();
+}
 
-const parser = new Parser(tokens);
-const ast = parser.parse();
-console.log('%j', ast);
+console.log(parse('<3 + 4 ^ <3 - 4>>'));
