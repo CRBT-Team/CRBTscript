@@ -1,8 +1,10 @@
+import chalk from 'chalk';
+
 export const TokenRegex = {
   NUMBER: /^[\s]*(?:-)?[0-9]+(?:\.[0-9]+)?/,
   STRING: /$./, // this regex intentionally never matches, because string matching is already handled for in the tokenizer
   BUILTIN: /^[\s]*(?:num|void|string|frac|bool|array)\s/,
-  EMBEDDED: /^[\s]*<[A-Za-z_][\w]>*/,
+  EMBEDDED: /^[\s]*<.*>/,
   OPERATOR: /^[\s]*(?:[+\-\/*\=])/,
   OTHER: /^[\s]*(?:\,)/
 };
@@ -11,7 +13,7 @@ export enum TokenType {
   NUMBER,
   STRING,
   BUILTIN,
-  EMBEDDED,
+  SPECIAL,
   OPERATOR,
   OTHER
 }
@@ -30,7 +32,24 @@ export default class Token {
     this.value = value;
   }
 
+  public static colorToken(token: Token) {
+    switch(token.type) {
+      case TokenType.NUMBER:
+        return chalk.redBright;
+      case TokenType.STRING:
+        return chalk.greenBright;
+      case TokenType.BUILTIN:
+        return chalk.yellowBright;
+      case TokenType.SPECIAL:
+        return chalk.cyanBright;
+      case TokenType.OPERATOR:
+        return chalk.magentaBright;
+      case TokenType.OTHER:
+        return chalk.blueBright;
+    }
+  }
+
   public toString(): string {
-    return `<${getTokenTypeName(this.type).slice(0, 2)}:${this.value}>`;
+    return `[${Token.colorToken(this)(this.value)}]`;
   }
 }

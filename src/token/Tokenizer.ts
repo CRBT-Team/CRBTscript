@@ -41,20 +41,28 @@ export default class Tokenizer {
     return true;
   }
 
-  public parseSlice(isParsingString = false) {
+  public parseSlice(isParsingString = false): Token | Token[] {
     let token = null;
     for (let i = 0; i < Object.keys(TokenRegex).length; i++) {
       const tokenAttempt = Object.values(TokenRegex)[i].exec(this.slice);
       if (tokenAttempt === null) continue;
 
-      token = new Token(i, tokenAttempt[0].trim());
+      const result = tokenAttempt[0].trim();
+      if (Object.keys(TokenRegex)[i] === 'EMBEDDED') {
+        const tokens = [];
+        tokens.push(new Token(TokenType.SPECIAL, '<'));
+        const subTokenizer = new Tokenizer(result.substring(1, result.length - 1));
+        tokens.push(...subTokenizer.createTokens());
+        tokens.push(new Token(TokenType.SPECIAL, '>'));
+        return tokens;
+      } else token = new Token(i, tokenAttempt[0].trim());
       break;
     }
 
     if (token === null) {
       if (isParsingString) return new Token(TokenType.OTHER, 'no');
       const currentSlice = this.slice;
-      while (this.advance(1) && !Object.values(TokenRegex).some(regex => !!regex.test(this.slice))) {}
+      while (this.advance(1) && !Object.values(TokenRegex).some(regex => !!regex.test(this.slice)) && this.slice.length) {}
       return new Token(TokenType.STRING, currentSlice.substring(0, currentSlice.length - this.slice.length).trim());
     }
 
@@ -64,9 +72,15 @@ export default class Tokenizer {
   public createTokens() {
     const tokens: Token[] = [];
     while (this.slice) {
-      const token = this.parseSlice();
-      tokens.push(token);
-      if (token.type !== TokenType.STRING) this.advance(token.value.length);
+      let token = this.parseSlice();
+      tokens.push(...[token].flat());
+      if (!(token as Token[]).length) {
+        token = token as Token;
+        if (token.type !== TokenType.STRING) this.advance(token.value.length);
+      } else {
+        token = token as Token[];
+        token.forEach(v => this.advance(v.value.length));
+      }
     }
     return tokens;
   }
