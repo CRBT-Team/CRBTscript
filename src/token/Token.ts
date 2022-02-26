@@ -3,24 +3,39 @@ import chalk from 'chalk';
 export const TokenRegex = {
   NUMBER: /^[\s]*(?:-)?[0-9]+(?:\.[0-9]+)?/,
   STRING: /$./, // this regex intentionally never matches, because string matching is already handled for in the tokenizer
-  BUILTIN: /^[\s]*(?:num|void|string|frac|bool|array)\s/,
   EMBEDDED: /^[\s]*<.*>/,
-  OPERATOR: /^[\s]*(?:[+\-\/*\=])/,
+  OPERATOR: /^[\s]*(?:[+\-\/*\^]|(?:<|>)[=]?|[!]?[=])/,
   OTHER: /^[\s]*(?:\,)/
 };
 
 export enum TokenType {
   NUMBER,
   STRING,
-  BUILTIN,
   SPECIAL,
   OPERATOR,
   OTHER
 }
 
+export type Operator =
+  | '+'
+  | '-'
+  | '*'
+  | '/'
+  | '^'
+  | '='
+  | '!='
+  | '<'
+  | '>'
+  | '<='
+  | '>=';
+
 export function getTokenTypeName(type: TokenType) {
   const types = Object.keys(TokenType);
   return types[type + types.length / 2] as string;
+}
+
+export function checkToken(token: Token, type: TokenType, value?: string) {
+  return token.type === type && (value ? token.value === value : true);
 }
 
 export default class Token {
@@ -33,13 +48,11 @@ export default class Token {
   }
 
   public static colorToken(token: Token) {
-    switch(token.type) {
+    switch (token.type) {
       case TokenType.NUMBER:
         return chalk.redBright;
       case TokenType.STRING:
         return chalk.greenBright;
-      case TokenType.BUILTIN:
-        return chalk.yellowBright;
       case TokenType.SPECIAL:
         return chalk.cyanBright;
       case TokenType.OPERATOR:
