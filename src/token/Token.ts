@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 
 export const TokenRegex = {
-  NUMBER: /^[\s]*(?:-)?[0-9]+(?:\.[0-9]+)?/,
   STRING: /$./, // this regex intentionally never matches, because string matching is already handled for in the tokenizer
   EMBEDDED: /^[\s]*<.*>/,
   OPERATOR: /^[\s]*(?:[+\-\/*\^]|(?:<|>)[=]?|[!]?[=])/,
@@ -9,11 +8,11 @@ export const TokenRegex = {
 };
 
 export enum TokenType {
-  NUMBER,
   STRING,
   SPECIAL,
   OPERATOR,
-  OTHER
+  OTHER,
+  NUMBER
 }
 
 export type Operator =

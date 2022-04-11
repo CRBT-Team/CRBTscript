@@ -42,7 +42,6 @@ export default class Tokenizer {
   }
 
   public parseSlice(isParsingString = false): Token | Token[] {
-    let token = null;
     for (let i = 0; i < Object.keys(TokenRegex).length; i++) {
       const tokenAttempt = Object.values(TokenRegex)[i].exec(this.slice);
       if (tokenAttempt === null) continue;
@@ -55,18 +54,22 @@ export default class Tokenizer {
         tokens.push(...subTokenizer.createTokens());
         tokens.push(new Token(TokenType.SPECIAL, '>'));
         return tokens;
-      } else token = new Token(i, tokenAttempt[0].trim());
-      break;
+      } else if (Object.keys(TokenRegex)[i] === 'STRING') {
+        const str = tokenAttempt[0].trim();
+        let num;
+        if (isNaN(num = parseInt(str))) {
+          return new Token(i, tokenAttempt[0].trim());
+        } else {
+          return new Token(TokenType.NUMBER, num);
+        }
+      } else return new Token(i, tokenAttempt[0].trim());
     }
 
-    if (token === null) {
-      if (isParsingString) return new Token(TokenType.OTHER, 'no');
-      const currentSlice = this.slice;
-      while (this.advance(1) && !Object.values(TokenRegex).some(regex => !!regex.test(this.slice)) && this.slice.length) {}
-      return new Token(TokenType.STRING, currentSlice.substring(0, currentSlice.length - this.slice.length).trim());
-    }
-
-    return token as Token;
+    // if none matched we haven't returned therefore we have an error
+    if (isParsingString) return new Token(TokenType.OTHER, 'no');
+    const currentSlice = this.slice;
+    while (this.advance(1) && !Object.values(TokenRegex).some(regex => !!regex.test(this.slice)) && this.slice.length) {}
+    return new Token(TokenType.STRING, currentSlice.substring(0, currentSlice.length - this.slice.length).trim());
   }
 
   public createTokens() {

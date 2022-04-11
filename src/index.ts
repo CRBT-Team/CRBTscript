@@ -5,7 +5,7 @@ import Tokenizer from './token/Tokenizer';
 export default function parse(code: string): string {
   const tokens = new Tokenizer(code).createTokens();
   const ast = new Parser(tokens).parse();
-  return new Evaluator(ast).evaluate();
+  return new Evaluator(ast).evaluate().value;
 }
 
-console.log(parse('<3 + 4 ^ <3 - 4>>'));
+console.log(parse("<I'm dying at 3 PM>"));
