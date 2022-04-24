@@ -2,6 +2,7 @@ import chalk from 'chalk';
 
 export const TokenRegex = {
   STRING: /$./, // this regex intentionally never matches, because string matching is already handled for in the tokenizer
+  TAG: /^[\s]*<(?:user|whatever)(?:\.[a-zA-Z0-9]+?(?:\(.*\))?)*>/,
   EMBEDDED: /^[\s]*<.*>/,
   OPERATOR: /^[\s]*(?:[+\-\/*\^]|(?:<|>)[=]?|[!]?[=])/,
   OTHER: /^[\s]*(?:\,)/
@@ -9,6 +10,7 @@ export const TokenRegex = {
 
 export enum TokenType {
   STRING,
+  TAG,
   SPECIAL,
   OPERATOR,
   OTHER,
@@ -56,12 +58,14 @@ export default class Token {
         return chalk.cyanBright;
       case TokenType.OPERATOR:
         return chalk.magentaBright;
+      case TokenType.TAG:
+        return chalk.yellowBright;
       case TokenType.OTHER:
         return chalk.blueBright;
     }
   }
 
   public toString(): string {
-    return `[${Token.colorToken(this)(this.value)}]`;
+    return `${Token.colorToken(this)(this.value)}`;
   }
 }

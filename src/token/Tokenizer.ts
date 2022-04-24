@@ -54,6 +54,41 @@ export default class Tokenizer {
         tokens.push(...subTokenizer.createTokens());
         tokens.push(new Token(TokenType.SPECIAL, '>'));
         return tokens;
+      } else if (Object.keys(TokenRegex)[i] === 'TAG') {
+        const tokens = [];
+        let dotAccess = result.slice(1, -1); // remove the <>
+        tokens.push(new Token(TokenType.SPECIAL, '<')); // but push them back
+        while (dotAccess) {
+          if (dotAccess[0] === '.') {
+            tokens.push(new Token(TokenType.SPECIAL, '.'));
+            dotAccess = dotAccess.slice(1);
+            continue;
+          }
+          let str = '';
+          while (!['.', '('].includes(dotAccess[0])) {
+            if (dotAccess[0]) console.log(dotAccess[0]);
+            str += dotAccess[0];
+            dotAccess = dotAccess.slice(1);
+          }
+          tokens.push(new Token(TokenType.TAG, str));
+          if (dotAccess[0] === '(') {
+            let i = 0, pl = 0;
+            for (; i < dotAccess.length; i++) {
+              if (dotAccess[i] === '(') pl++;
+              if (dotAccess[i] === ')') {
+                pl--;
+                if (pl === 0) break;
+              }
+            }
+            tokens.push(new Token(TokenType.SPECIAL, '('));
+            const subTokenizer = new Tokenizer(dotAccess.slice(1, i));
+            dotAccess = dotAccess.slice(i + 1);
+            tokens.push(...subTokenizer.createTokens());
+            tokens.push(new Token(TokenType.SPECIAL, ')'));
+          }
+        }
+        tokens.push(new Token(TokenType.SPECIAL, '>')); // (but push them back)
+        return tokens;
       } else if (Object.keys(TokenRegex)[i] === 'STRING') {
         const str = tokenAttempt[0].trim();
         let num;
