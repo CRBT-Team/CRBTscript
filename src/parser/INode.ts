@@ -39,3 +39,13 @@ export interface IOperatorNode extends INode {
 export interface IExpressionNode extends INode {
   expr: INode[];
 }
+
+export interface IFunctionCallNode extends INode {
+  name: string;
+  args: INode[];
+}
+
+export interface IDotAccessNode extends INode {
+  accessee: ISymbolNode | IFunctionCallNode | IDotAccessNode;
+  prop    : ISymbolNode | IFunctionCallNode | IDotAccessNode;
+}
