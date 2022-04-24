@@ -7,7 +7,7 @@ export default class String implements IDataClass {
   public _add(string1: IValueNode, string2: IValueNode): IValueNode {
     return {
       type: NodeType.StringLiteral,
-      value: string1.value + string2.value
+      value: (string1.value + ' ' + string2.value).split(' ').map(v => v.trim()).join(' ')
     } as IValueNode;
   }
   public _subtract(_string1: IValueNode, _string2: IValueNode): IValueNode {

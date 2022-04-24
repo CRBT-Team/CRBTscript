@@ -8,4 +8,4 @@ export default function parse(code: string): string {
   return new Evaluator(ast).evaluate().value;
 }
 
-console.log(parse("<I'm dying at 3 PM>"));
+console.log(parse("<I'm dying at 3 PM + hi + house>"));
