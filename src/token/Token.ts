@@ -65,6 +65,10 @@ export default class Token {
     }
   }
 
+  public check(type: TokenType, value?: string) {
+    return checkToken(this, type, value);
+  }
+
   public toString(): string {
     return `${Token.colorToken(this)(this.value)}`;
   }

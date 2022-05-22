@@ -66,7 +66,6 @@ export default class Tokenizer {
           }
           let str = '';
           while (!['.', '('].includes(dotAccess[0])) {
-            if (dotAccess[0]) console.log(dotAccess[0]);
             str += dotAccess[0];
             dotAccess = dotAccess.slice(1);
           }

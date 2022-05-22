@@ -1,11 +1,13 @@
-import Token, { TokenType } from '../token/Token';
-import INode, { ITopNode, NodeType } from './INode';
+import Token from '../token/Token';
+import INode, { IDotAccessNode, ITopNode, NodeType } from './INode';
 import { expressionWalker } from './walker/Expression';
 // import { defaultWalker } from "./defaultWalker";
 
 export default class Parser {
   public tokens: Token[];
   public current: number;
+
+  public tagSnowball?: IDotAccessNode; // do not touch this variable, its purpose is to snowball a DotAccessNode
 
   constructor(tokens: Token[]) {
     this.tokens = tokens;

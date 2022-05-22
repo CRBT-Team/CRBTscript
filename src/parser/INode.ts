@@ -13,6 +13,8 @@ export enum NodeType {
   Symbol,
   Expression,
   Operator,
+  FunctionCall,
+  DotAccess,
   NullNode
 }
 

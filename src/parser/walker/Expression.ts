@@ -32,7 +32,7 @@ export const expressionWalker: Walker = (parser: Parser): INode => {
         return expr;
       } else {
         // if it's not then some unimplemented / incorrect syntax was used
-        throw `i did not expect you to give me a ${token.value}; yet you DID. disrespectful... smh`;
+        throw `Got unexpected ${token.toString()}.`;
       }
 
     // if none matched, something went wrong
