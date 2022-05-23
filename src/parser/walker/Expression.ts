@@ -1,7 +1,7 @@
-import Token, { checkToken, TokenType } from '../../token/Token';
+import Token, { TokenType } from '../../token/Token';
 import { parseValue, parseOperator, parseSymbol } from './LowLevel';
 import INode, { NodeType } from '../INode';
-import { parseExpression } from '../Functions';
+import { parseDotAccess, parseExpression } from '../Functions';
 import Parser from '../Parser';
 import { Walker } from './Walker';
 
@@ -24,14 +24,20 @@ export const expressionWalker: Walker = (parser: Parser): INode => {
 
     // sub-expressions and arrays
     case TokenType.SPECIAL:
-      // if there's a ( expression
+      // if there's a ( expression or tag/dot access
       if (token.value === '<') {
+        if (parser.next().check(TokenType.TAG)) {
+          // if it's a tag, we parse the dot access
+          return parseDotAccess(parser);
+        }
+        // otherwise just parse the expression
         parser.current++; // skip it
         const expr = parseExpression(parser, '>');
         parser.current++; // skip closing parenthesis
         return expr;
       } else {
         // if it's not then some unimplemented / incorrect syntax was used
+        console.log(parser.next(-1).toString(), parser.next(0).toString(), parser.next().toString());
         throw `Got unexpected ${token.toString()}.`;
       }
 

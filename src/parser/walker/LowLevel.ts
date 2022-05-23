@@ -1,5 +1,6 @@
 import { TokenType } from "../../token/Token";
-import INode, { NodeType, ISymbolNode, IOperatorNode, IValueNode } from "../INode";
+import { parseExpression } from "../Functions";
+import INode, { NodeType, ISymbolNode, IOperatorNode, IValueNode, IExpressionNode, IFunctionCallNode } from "../INode";
 import Parser from "../Parser";
 import { Walker } from "./Walker";
 
@@ -40,3 +41,28 @@ export const parseValue: Walker = (parser: Parser): INode => {
   
   throw 'something is wrong with the expression parser';
 };
+
+export const parseFunctionCall: Walker = (parser: Parser): INode => {
+  // name(param1, param2, ...)
+  const functionName = parser.currentToken.value; // name
+  console.log(parser.next(-1).toString(), parser.next(0).toString(), parser.next().toString());
+  parser.current += 2; // skip name & (
+  console.log(parser.next(-1).toString(), parser.next(0).toString(), parser.next().toString());
+  const args: IExpressionNode[] = [];
+  // param1, param2, ...
+  while (!parser.next(0).check(TokenType.SPECIAL, ')')) { // if there are no params it's already in )
+    console.log(parser.next(-1).toString(), parser.next(0).toString(), parser.next().toString());
+    const param = parseExpression(parser, ')', ','); // no trailing commas >:)
+    args.push(param);
+    parser.current ++; // skip the special symbol
+    console.log(parser.next(-1).toString(), parser.next(0).toString(), parser.next().toString());
+  }
+  parser.current ++; // skip )
+  console.log(parser.next(-1).toString(), parser.next(0).toString(), parser.next().toString());
+  console.log("Finished parsing function!");
+  return {
+    type: NodeType.FunctionCall,
+    name: functionName,
+    args
+  } as IFunctionCallNode;
+}

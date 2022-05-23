@@ -35,10 +35,6 @@ export function getTokenTypeName(type: TokenType) {
   return types[type + types.length / 2] as string;
 }
 
-export function checkToken(token: Token, type: TokenType, value?: string) {
-  return token.type === type && (value ? token.value === value : true);
-}
-
 export default class Token {
   public type: TokenType;
   public value: string;
@@ -66,7 +62,11 @@ export default class Token {
   }
 
   public check(type: TokenType, value?: string) {
-    return checkToken(this, type, value);
+    return this.type === type && value ? this.value === value : true;
+  }
+
+  public checkArr(type: TokenType[], value?: string[]) {
+    return type.includes(this.type) && value ? value.includes(this.value) : true;
   }
 
   public toString(): string {
