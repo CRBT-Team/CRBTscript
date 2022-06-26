@@ -62,7 +62,7 @@ export default class Token {
   }
 
   public check(type: TokenType, value?: string) {
-    return this.type === type && value ? this.value === value : true;
+    return (this.type === type) && (value ? (this.value === value) : true);
   }
 
   public checkArr(type: TokenType[], value?: string[]) {

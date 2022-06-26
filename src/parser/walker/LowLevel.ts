@@ -45,20 +45,15 @@ export const parseValue: Walker = (parser: Parser): INode => {
 export const parseFunctionCall: Walker = (parser: Parser): INode => {
   // name(param1, param2, ...)
   const functionName = parser.currentToken.value; // name
-  console.log(parser.next(-1).toString(), parser.next(0).toString(), parser.next().toString());
   parser.current += 2; // skip name & (
-  console.log(parser.next(-1).toString(), parser.next(0).toString(), parser.next().toString());
   const args: IExpressionNode[] = [];
   // param1, param2, ...
-  while (!parser.next(0).check(TokenType.SPECIAL, ')')) { // if there are no params it's already in )
-    console.log(parser.next(-1).toString(), parser.next(0).toString(), parser.next().toString());
-    const param = parseExpression(parser, ')', ','); // no trailing commas >:)
+  while (!parser.currentToken.check(TokenType.SPECIAL, ')')) { // if there are no params it's already in )
+    const param = parseExpression(parser, ',', ')'); // no trailing commas >:)
     args.push(param);
     parser.current ++; // skip the special symbol
-    console.log(parser.next(-1).toString(), parser.next(0).toString(), parser.next().toString());
   }
   parser.current ++; // skip )
-  console.log(parser.next(-1).toString(), parser.next(0).toString(), parser.next().toString());
   console.log("Finished parsing function!");
   return {
     type: NodeType.FunctionCall,
