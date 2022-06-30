@@ -66,7 +66,7 @@ export default class Token {
   }
 
   public checkArr(type: TokenType[], value?: string[]) {
-    return type.includes(this.type) && value ? value.includes(this.value) : true;
+    return type.includes(this.type) && (value ? value.includes(this.value) : true);
   }
 
   public toString(): string {

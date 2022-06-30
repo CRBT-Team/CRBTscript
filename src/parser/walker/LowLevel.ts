@@ -51,10 +51,10 @@ export const parseFunctionCall: Walker = (parser: Parser): INode => {
   while (!parser.currentToken.check(TokenType.SPECIAL, ')')) { // if there are no params it's already in )
     const param = parseExpression(parser, ',', ')'); // no trailing commas >:)
     args.push(param);
+    if (parser.currentToken.check(TokenType.SPECIAL, ')')) break;
     parser.current ++; // skip the special symbol
   }
   parser.current ++; // skip )
-  console.log("Finished parsing function!");
   return {
     type: NodeType.FunctionCall,
     name: functionName,

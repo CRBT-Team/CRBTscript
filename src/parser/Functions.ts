@@ -27,13 +27,18 @@ export function parseDotAccess(parser: Parser): IDotAccessNode | ISymbolNode {
   let final: IDotAccessNode = {
     type: NodeType.DotAccess
   } as IDotAccessNode;
+
   function snowball(node: ISymbolNode | IFunctionCallNode) {
     if (!final.accessee) {
       final.accessee = node;
     } else if (!final.prop) {
       final.prop = node;
     } else {
-      const f = final;
+      const f = {
+        type: final.type,
+        accessee: final.accessee,
+        prop: final.prop
+      } as IDotAccessNode;
       final.prop = node;
       final.accessee = f;
     }
@@ -42,7 +47,7 @@ export function parseDotAccess(parser: Parser): IDotAccessNode | ISymbolNode {
   parser.current ++; // firstly we skip the <
 
   // main loop
-  while (parser.currentToken.check(TokenType.SPECIAL, '>')) {
+  while (parser.currentToken && !parser.currentToken.check(TokenType.SPECIAL, '>')) {
     const curr = parser.currentToken;
     const next = parser.next();
     // because curr will always be a name, next will always be a dot, ( or >

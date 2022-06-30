@@ -12,6 +12,10 @@ export default class Parser {
     this.current = 0;
   }
 
+  public logTokens() {
+    console.log(this.next(-1).toString(), this.currentToken.toString(), this.next().toString());
+  }
+
   public next(factor = 1) {
     return this.tokens[this.current + factor];
   }

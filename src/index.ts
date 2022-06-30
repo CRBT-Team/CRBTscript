@@ -6,6 +6,7 @@ export default function parse(code: string): string {
   const tokens = new Tokenizer(code).createTokens();
   console.log(tokens.map(v => v.toString()).join(''));
   const ast = new Parser(tokens).parse();
+  console.log("%j", ast);
   return new Evaluator(ast).evaluate().value;
 }
 

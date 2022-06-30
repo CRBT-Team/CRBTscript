@@ -37,7 +37,7 @@ export const expressionWalker: Walker = (parser: Parser): INode => {
         return expr;
       } else {
         // if it's not then some unimplemented / incorrect syntax was used
-        console.log(parser.next(-1).toString(), parser.next(0).toString(), parser.next().toString());
+        parser.logTokens();
         throw `Got unexpected ${token.toString()}.`;
       }
 
