@@ -47,7 +47,7 @@ export function parseDotAccess(parser: Parser): IDotAccessNode | ISymbolNode {
   parser.current ++; // firstly we skip the <
 
   // main loop
-  while (parser.currentToken && !parser.currentToken.check(TokenType.SPECIAL, '>')) {
+  while (parser.next(-1) && !parser.next(-1).check(TokenType.SPECIAL, '>')) {
     const curr = parser.currentToken;
     const next = parser.next();
     // because curr will always be a name, next will always be a dot, ( or >

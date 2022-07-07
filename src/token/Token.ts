@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 
-export const TokenRegex = {
+export let TokenRegex = {
   STRING: /$./, // this regex intentionally never matches, because string matching is already handled for in the tokenizer
-  TAG: /^[\s]*<(?:user|whatever)(?:\.[a-zA-Z0-9]+?(?:\(.*\))?)*>/,
+  TAG: /^[\s]*<(?:insert stuff here)(?:\.[a-zA-Z0-9]+?(?:\(.*?\))?)*>/, // the stuff gets inserted by the tokenizer
   EMBEDDED: /^[\s]*<.*>/,
   OPERATOR: /^[\s]*(?:[+\-\/*\^]|(?:<|>)[=]?|[!]?[=])/,
   OTHER: /^[\s]*(?:\,)/
@@ -14,7 +14,7 @@ export enum TokenType {
   SPECIAL,
   OPERATOR,
   OTHER,
-  NUMBER
+  NUMBER // TODO: no
 }
 
 export type Operator =

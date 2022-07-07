@@ -27,11 +27,13 @@ export default class Tokenizer {
   public code: string;
   public pos: Pos;
   public slice: string;
+  private symbolNames: string[];
 
-  constructor(code: string) {
+  constructor(code: string, ...symbolNames: string[]) {
     this.code = code;
     this.pos = new Pos(0, 0, 0, code);
     this.slice = code;
+    this.symbolNames = symbolNames;
   }
 
   public advance(n: number) {
@@ -42,20 +44,21 @@ export default class Tokenizer {
   }
 
   public parseSlice(isParsingString = false): Token | Token[] {
+    TokenRegex.TAG = new RegExp(`^[\s]*<(?:${this.symbolNames.join('|')})(?:\.[a-zA-Z0-9]+?(?:\(.*?\))?)*>`);
     for (let i = 0; i < Object.keys(TokenRegex).length; i++) {
       const tokenAttempt = Object.values(TokenRegex)[i].exec(this.slice);
       if (tokenAttempt === null) continue;
 
       const result = tokenAttempt[0].trim();
       if (Object.keys(TokenRegex)[i] === 'EMBEDDED') {
-        const tokens = [];
+        const tokens: Token[] = [];
         tokens.push(new Token(TokenType.SPECIAL, '<'));
         const subTokenizer = new Tokenizer(result.substring(1, result.length - 1));
         tokens.push(...subTokenizer.createTokens());
         tokens.push(new Token(TokenType.SPECIAL, '>'));
         return tokens;
       } else if (Object.keys(TokenRegex)[i] === 'TAG') {
-        const tokens = [];
+        const tokens: Token[] = [];
         let dotAccess = result.slice(1, -1); // remove the <>
         tokens.push(new Token(TokenType.SPECIAL, '<')); // but push them back
         while (dotAccess) {

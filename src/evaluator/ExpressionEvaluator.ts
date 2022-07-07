@@ -6,7 +6,7 @@ import { Operator } from '../token/Token';
 
 export default class ExpressionEvaluator {
   private static operatorPriorities: Operator[][] = [['^'], ['*', '/'], ['+', '-'], ['=', '<', '<=', '>', '>=', '!=']];
-  private static possibleValueTypes: NodeType[] = [NodeType.Boolean, NodeType.NumberLiteral, NodeType.StringLiteral];
+  private static possibleValueTypes: NodeType[] = [NodeType.Boolean, NodeType.NumberLiteral, NodeType.StringLiteral, NodeType.DotAccess];
 
   private static convertBoolNodeToNumberNode(boolNode: IValueNode): IValueNode {
     boolNode.type = NodeType.NumberLiteral;
