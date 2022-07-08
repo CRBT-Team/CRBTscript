@@ -68,7 +68,7 @@ export default class Tokenizer {
             continue;
           }
           let str = '';
-          while (!['.', '('].includes(dotAccess[0])) {
+          while (dotAccess && !['.', '('].includes(dotAccess[0])) {
             str += dotAccess[0];
             dotAccess = dotAccess.slice(1);
           }

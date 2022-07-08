@@ -9,7 +9,9 @@ export default function parse(code: string, ...crbtScriptTags: [string, any][]):
   return new Evaluator(ast, ...crbtScriptTags).evaluate().value;
 }
 
-console.log(parse("I'm dying at 3 PM + <3 + <user.die(3 + 4, 5).tents.eat(3 + <4 + 5>)>> + hi + house + <user.die(3 + 4, 5).tents.eat(3 + <4 + 5>)>", ['user', {
+console.log(parse("I'm dying at 3 PM + <1+<user.die(3 + 4, 5).tents.eat(3 + <4 + 5>)>+2> + hi + house + <user.die(3 + 4, 5).tents.eat(3 + <4 + 5>)>", ['user', {
+  name: 'John',
+  ban: () => console.log('hi'),
   die: (a, b) => ({
     tents: {
       eat: (c) => a * b * c

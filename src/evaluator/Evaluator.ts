@@ -37,7 +37,11 @@ export default class Evaluator {
           }
           name = a.name;
           if (a.type === NodeType.Symbol) {
-            c = c[name];
+            if (typeof c[name] == 'function') {
+              c = c[name]();
+            } else {
+              c = c[name];
+            }
           } else {
             const args = (a as IFunctionCallNode).args.map(v => this.evaluateExpression(v as IExpressionNode)).map(v => v.value);
             c = c[name](...args);
