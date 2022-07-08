@@ -32,7 +32,6 @@ export default class Evaluator {
         let c = this.globals.get((e as ISymbolNode | IFunctionCallNode).name);
         let name = "";
         for (const a of accesses) {
-          console.log("mu");
           if (c === undefined) {
             throw new Error(`Undefined symbol: ${name}`);
           }
@@ -46,7 +45,7 @@ export default class Evaluator {
         }
         
         return {
-          type: NodeType.StringLiteral,
+          type: NodeType.Value,
           value: c
         } as IValueNode;
       } else {

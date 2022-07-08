@@ -13,9 +13,8 @@ export const expressionWalker: Walker = (parser: Parser): INode => {
 
   // look at which type the token is and act correspondingly
   switch (token.type) {
-    // a value (fallthrough)
-    case TokenType.NUMBER:
-    case TokenType.STRING:
+    // a value
+    case TokenType.VALUE:
       return parseValue(parser);
 
     // an operator

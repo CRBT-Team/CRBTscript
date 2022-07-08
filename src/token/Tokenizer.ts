@@ -91,14 +91,6 @@ export default class Tokenizer {
         }
         tokens.push(new Token(TokenType.SPECIAL, '>')); // (but push them back)
         return tokens;
-      } else if (Object.keys(TokenRegex)[i] === 'STRING') {
-        const str = tokenAttempt[0].trim();
-        let num;
-        if (isNaN(num = parseInt(str))) {
-          return new Token(i, tokenAttempt[0].trim());
-        } else {
-          return new Token(TokenType.NUMBER, num);
-        }
       } else return new Token(i, tokenAttempt[0].trim());
     }
 
@@ -106,7 +98,7 @@ export default class Tokenizer {
     if (isParsingString) return new Token(TokenType.OTHER, 'no');
     const currentSlice = this.slice;
     while (this.advance(1) && !Object.values(TokenRegex).some(regex => !!regex.test(this.slice)) && this.slice.length) {}
-    return new Token(TokenType.STRING, currentSlice.substring(0, currentSlice.length - this.slice.length).trim());
+    return new Token(TokenType.VALUE, currentSlice.substring(0, currentSlice.length - this.slice.length).trim());
   }
 
   public createTokens() {
@@ -116,7 +108,7 @@ export default class Tokenizer {
       tokens.push(...[token].flat());
       if (!(token as Token[]).length) {
         token = token as Token;
-        if (token.type !== TokenType.STRING) this.advance(token.value.length);
+        if (token.type !== TokenType.VALUE) this.advance(token.value.length);
       } else {
         token = token as Token[];
         token.forEach(v => this.advance(v.value.length));

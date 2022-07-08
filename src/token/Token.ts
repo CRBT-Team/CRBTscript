@@ -1,20 +1,19 @@
 import chalk from 'chalk';
 
 export let TokenRegex = {
-  STRING: /$./, // this regex intentionally never matches, because string matching is already handled for in the tokenizer
+  VALUE: /$./, // this regex intentionally never matches, because string matching is already handled for in the tokenizer
   TAG: /^[\s]*<(?:insert stuff here)(?:\.[a-zA-Z0-9]+?(?:\(.*?\))?)*>/, // the stuff gets inserted by the tokenizer
   EMBEDDED: /^[\s]*<.*>/,
-  OPERATOR: /^[\s]*(?:[+\-\/*\^]|(?:<|>)[=]?|[!]?[=])/,
+  OPERATOR: /^[\s]*(?:[+\-\/*\^]|(?:<|>)=|[!]?[=])/,
   OTHER: /^[\s]*(?:\,)/
 };
 
 export enum TokenType {
-  STRING,
+  VALUE,
   TAG,
   SPECIAL,
   OPERATOR,
-  OTHER,
-  NUMBER // TODO: no
+  OTHER
 }
 
 export type Operator =
@@ -46,9 +45,7 @@ export default class Token {
 
   public static colorToken(token: Token) {
     switch (token.type) {
-      case TokenType.NUMBER:
-        return chalk.redBright;
-      case TokenType.STRING:
+      case TokenType.VALUE:
         return chalk.greenBright;
       case TokenType.SPECIAL:
         return chalk.cyanBright;

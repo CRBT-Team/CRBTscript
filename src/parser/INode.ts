@@ -6,10 +6,8 @@ export function getNodeTypeName(n: NodeType) {
 
 export enum NodeType {
   Program,
-  NumberLiteral,
   Array,
-  StringLiteral,
-  Boolean,
+  Value,
   Symbol,
   Expression,
   Operator,

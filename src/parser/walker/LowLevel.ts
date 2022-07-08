@@ -24,17 +24,10 @@ export const parseOperator: Walker = (parser: Parser): INode => {
 
 export const parseValue: Walker = (parser: Parser): INode => {
   const token = parser.currentToken;
-  if (token.type === TokenType.NUMBER) {
+  if (token.type === TokenType.VALUE) {
     parser.current++;
     return {
-      type: NodeType.NumberLiteral,
-      value: token.value.includes('.') ? parseFloat(token.value) : parseInt(token.value)
-    } as IValueNode;
-  }
-  if (token.type === TokenType.STRING) {
-    parser.current++;
-    return {
-      type: NodeType.StringLiteral,
+      type: NodeType.Value,
       value: token.value
     } as IValueNode;
   }
