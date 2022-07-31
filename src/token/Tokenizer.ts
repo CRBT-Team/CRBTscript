@@ -1,4 +1,4 @@
-import Token, { TokenRegex, TokenType } from './Token';
+import Token, { PositionalToken, TokenRegex, TokenType } from './Token';
 
 export class Pos {
   constructor(public idx: number, public ln: number, public col: number, public code: string) {}
@@ -23,97 +23,96 @@ export class Pos {
   }
 }
 
+class Bracket {
+  constructor(public start: number, public end: number, public level: number) {}
+}
+
 export default class Tokenizer {
   public code: string;
-  public pos: Pos;
-  public slice: string;
   private symbolNames: string[];
+  private bracketHierarchy: Bracket[];
+  private unorderedTokens: PositionalToken[];
 
   constructor(code: string, ...symbolNames: string[]) {
     this.code = code;
-    this.pos = new Pos(0, 0, 0, code);
-    this.slice = code;
     this.symbolNames = symbolNames;
+    this.bracketHierarchy = [];
+    this.makeBracketHierarchy();
   }
 
-  public advance(n: number) {
-    this.pos.advance(n);
-    this.slice = this.code.slice(this.pos.idx);
-    while ([' ', '\t', ' ', '\n'].includes(this.slice[0])) this.advance(1);
-    return true;
-  }
-
-  public parseSlice(isParsingString = false): Token | Token[] {
-    TokenRegex.TAG = new RegExp(`^[\s]*<(?:${this.symbolNames.join('|')})(?:\.[a-zA-Z0-9]+?(?:\(.*?\))?)*>`);
-    for (let i = 0; i < Object.keys(TokenRegex).length; i++) {
-      const tokenAttempt = Object.values(TokenRegex)[i].exec(this.slice);
-      if (tokenAttempt === null) continue;
-
-      const result = tokenAttempt[0].trim();
-      if (Object.keys(TokenRegex)[i] === 'EMBEDDED') {
-        const tokens: Token[] = [];
-        tokens.push(new Token(TokenType.SPECIAL, '<'));
-        const subTokenizer = new Tokenizer(result.substring(1, result.length - 1));
-        tokens.push(...subTokenizer.createTokens());
-        tokens.push(new Token(TokenType.SPECIAL, '>'));
-        return tokens;
-      } else if (Object.keys(TokenRegex)[i] === 'TAG') {
-        const tokens: Token[] = [];
-        let dotAccess = result.slice(1, -1); // remove the <>
-        tokens.push(new Token(TokenType.SPECIAL, '<')); // but push them back
-        while (dotAccess) {
-          if (dotAccess[0] === '.') {
-            tokens.push(new Token(TokenType.SPECIAL, '.'));
-            dotAccess = dotAccess.slice(1);
-            continue;
-          }
-          let str = '';
-          while (dotAccess && !['.', '('].includes(dotAccess[0])) {
-            str += dotAccess[0];
-            dotAccess = dotAccess.slice(1);
-          }
-          tokens.push(new Token(TokenType.TAG, str));
-          if (dotAccess[0] === '(') {
-            let i = 0, pl = 0;
-            for (; i < dotAccess.length; i++) {
-              if (dotAccess[i] === '(') pl++;
-              if (dotAccess[i] === ')') {
-                pl--;
-                if (pl === 0) break;
-              }
-            }
-            tokens.push(new Token(TokenType.SPECIAL, '('));
-            const subTokenizer = new Tokenizer(dotAccess.slice(1, i));
-            dotAccess = dotAccess.slice(i + 1);
-            tokens.push(...subTokenizer.createTokens());
-            tokens.push(new Token(TokenType.SPECIAL, ')'));
-          }
-        }
-        tokens.push(new Token(TokenType.SPECIAL, '>')); // (but push them back)
-        return tokens;
-      } else return new Token(i, tokenAttempt[0].trim());
+  public makeBracketHierarchy() {
+    const queue: number[] = [];
+    const brackets: Bracket[] = [];
+    let level = 0;
+    for (let i = 0 ; i < this.code.length; i++) {
+      if (this.code[i] === '<') {
+        queue.push(i);
+        level++;
+      }
+      if (this.code[i] === '>') {
+        level--;
+        brackets.push(new Bracket(queue.pop()!, i, level));
+      }
     }
+    brackets.sort((a, b) => (b.level - a.level) === 0 ? (b.start - a.start) : (b.level - a.level));
+    this.bracketHierarchy = brackets;
+  }
 
-    // if none matched we haven't returned therefore we have an error
-    if (isParsingString) return new Token(TokenType.OTHER, 'no');
-    const currentSlice = this.slice;
-    while (this.advance(1) && !Object.values(TokenRegex).some(regex => !!regex.test(this.slice)) && this.slice.length) {}
-    return new Token(TokenType.VALUE, currentSlice.substring(0, currentSlice.length - this.slice.length).trim());
+  public parseBracket(bracket: Bracket) {
+    const tagRegex = new RegExp(`^[\s]*<(?:${this.symbolNames.join('|')})(?:\.[a-zA-Z0-9]+?(?:\(.*?\))?)*>`);
+    const wholeBracket = this.code.slice(bracket.start, bracket.end + 1);
+    let bracketContent = this.code.slice(bracket.start + 1, bracket.end);
+    console.log(bracketContent);
+    const regexps = Object.values(TokenRegex);
+    const tokens: PositionalToken[] = [];
+    tokens.push(new Token(TokenType.SPECIAL, '<').pos(bracket.start));
+    if (tagRegex.exec(wholeBracket) !== null) {
+      bracketContent.split('.').forEach(v => {
+        // LATER
+      });
+      tokens.pop();
+      tokens.push(new Token(TokenType.SPECIAL, '>').pos(bracket.end + 1)); 
+    }
+    let n = 0;
+    let x = 0;
+    while (bracketContent && bracket.start + x < bracket.end) {
+      let m = n;
+      for (let i = 0 ; i < regexps.length ; i ++) {
+        const attempt = regexps[i].exec(bracketContent);
+        if (attempt === null) continue;
+        const result = attempt[0].trim();
+
+        const token = new Token(i, result).pos(bracket.start + x + 1);
+        tokens.push(token);
+        bracketContent = bracketContent.slice(token.token.value.length);
+        x += token.token.value.length;
+        n++;
+        break;
+      }
+      if (m === n) {
+        const rn = this.code[bracket.start + x + 1];
+        let slice = this.code.slice(bracket.start + x + 1);
+        while (slice[1] && (slice = slice.slice(1)) && slice && !Object.values(TokenRegex).some(regex => !!regex.test(slice)) && slice?.length) {}
+        console.log(`rn: ${rn}; slice: ${slice}`);
+        const length = slice.length - rn.length;
+        tokens.push(new Token(TokenType.VALUE, rn.substring(0, length)).pos(bracket.start + x));
+        x += length;
+      }
+      while(!!/\s/g.exec(this.code[bracket.start + x + 1])) {
+        x++;
+      }
+    }
+    tokens.push(new Token(TokenType.SPECIAL, '>').pos(bracket.end + 1));
+    this.unorderedTokens.push(...tokens);
   }
 
   public createTokens() {
     const tokens: Token[] = [];
-    while (this.slice) {
-      let token = this.parseSlice();
-      tokens.push(...[token].flat());
-      if (!(token as Token[]).length) {
-        token = token as Token;
-        if (token.type !== TokenType.VALUE) this.advance(token.value.length);
-      } else {
-        token = token as Token[];
-        token.forEach(v => this.advance(v.value.length));
-      }
+    while (this.bracketHierarchy.length) {
+      const bracket = this.bracketHierarchy.shift()!;
+      this.parseBracket(bracket);
     }
+    console.log(this.unorderedTokens);
     return tokens;
   }
 }

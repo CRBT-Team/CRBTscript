@@ -35,8 +35,11 @@ const sampleProps = ['user', {
 }]
 
 test('basic expression', ()=>{
-  expect(parse('<1 + 2>', sampleProps)).toBe("3");
+  expect(parse('<NO + 2>', sampleProps)).toBe("3");
 });
 test('complex expression', ()=>{
   expect(parse('<1 + <3 + 4> - 6 * 3>', sampleProps)).toBe("26");
 });
+test('long tag expression', ()=>{
+  expect(parse("I'm dying at 3 PM + <1+<user.die(3 + 4, 5).tents.eat(3 + <4 + 5>)>+2> + hi + house + <user.die(3 + 4, 5).tents.eat(3 + <4 + 5>)>", sampleProps)).toBe("idk");
+})

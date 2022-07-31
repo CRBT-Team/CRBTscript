@@ -2,7 +2,7 @@ import chalk from 'chalk';
 
 export let TokenRegex = {
   VALUE: /$./, // this regex intentionally never matches, because string matching is already handled for in the tokenizer
-  TAG: /^[\s]*<(?:insert stuff here)(?:\.[a-zA-Z0-9]+?(?:\(.*?\))?)*>/, // the stuff gets inserted by the tokenizer
+  TAG: /$./, // same thing
   EMBEDDED: /^[\s]*<.*>/,
   OPERATOR: /^[\s]*(?:[+\-\/*\^]|(?:<|>)=|[!]?[=])/,
   OTHER: /^[\s]*(?:\,)/
@@ -32,6 +32,10 @@ export type Operator =
 export function getTokenTypeName(type: TokenType) {
   const types = Object.keys(TokenType);
   return types[type + types.length / 2] as string;
+}
+
+export class PositionalToken {
+  constructor(public token: Token, public start: number) {}
 }
 
 export default class Token {
@@ -64,6 +68,10 @@ export default class Token {
 
   public checkArr(type: TokenType[], value?: string[]) {
     return type.includes(this.type) && (value ? value.includes(this.value) : true);
+  }
+
+  public pos(idx: number) {
+    return new PositionalToken(this, idx);
   }
 
   public toString(): string {
