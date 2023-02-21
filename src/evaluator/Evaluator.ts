@@ -1,5 +1,13 @@
+import INode, {
+  IDotAccessNode,
+  IExpressionNode,
+  IFunctionCallNode,
+  ISymbolNode,
+  ITopNode,
+  IValueNode,
+  NodeType
+} from '../parser/INode';
 import ExpressionEvaluator from './ExpressionEvaluator';
-import INode, { ITopNode, NodeType, IExpressionNode, IValueNode, ISymbolNode, IOperatorNode, IDotAccessNode, IFunctionCallNode } from '../parser/INode';
 
 export type ExprType = (INode | ExprType)[];
 
@@ -17,6 +25,7 @@ export default class Evaluator {
     const literalize = (v: INode): INode => {
       if (v.type === NodeType.Expression) {
         const e = (v as IExpressionNode).expr.map(literalize);
+
         return {
           type: NodeType.Expression,
           expr: e
@@ -30,24 +39,22 @@ export default class Evaluator {
         }
         accesses.reverse();
         let c = this.globals.get((e as ISymbolNode | IFunctionCallNode).name);
-        let name = "";
+        let name = '';
         for (const a of accesses) {
-          if (c === undefined) {
-            throw new Error(`Undefined symbol: ${name}`);
-          }
+          if (c === undefined) throw new Error(`Undefined symbol: ${name}`);
+
           name = a.name;
           if (a.type === NodeType.Symbol) {
-            if (typeof c[name] == 'function') {
-              c = c[name]();
-            } else {
-              c = c[name];
-            }
+            if (typeof c[name] == 'function') c = c[name]();
+            else c = c[name];
           } else {
-            const args = (a as IFunctionCallNode).args.map(v => this.evaluateExpression(v as IExpressionNode)).map(v => v.value);
+            const args = (a as IFunctionCallNode).args
+              .map(v => this.evaluateExpression(v as IExpressionNode))
+              .map(v => v.value);
             c = c[name](...args);
           }
         }
-        
+
         return {
           type: NodeType.Value,
           value: c
@@ -66,6 +73,9 @@ export default class Evaluator {
   }
 
   public evaluate() {
-    return this.evaluateExpression(this.ast.body[0] as IExpressionNode);
+    return this.evaluateExpression({
+      type: NodeType.Expression,
+      expr: this.ast.body
+    } as IExpressionNode);
   }
 }

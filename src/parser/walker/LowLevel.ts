@@ -1,12 +1,13 @@
-import { TokenType } from "../../token/Token";
-import { parseExpression } from "../Functions";
-import INode, { NodeType, ISymbolNode, IOperatorNode, IValueNode, IExpressionNode, IFunctionCallNode } from "../INode";
-import Parser from "../Parser";
-import { Walker } from "./Walker";
+import { check } from '../../token/Token';
+import { parseExpression } from '../Functions';
+import INode, { IExpressionNode, IFunctionCallNode, IOperatorNode, ISymbolNode, IValueNode, NodeType } from '../INode';
+import Parser from '../Parser';
+import { Walker } from './Walker';
 
 export const parseSymbol: Walker = (parser: Parser): INode => {
   const token = parser.currentToken;
   parser.current++;
+
   return {
     type: NodeType.Symbol,
     name: token.value
@@ -16,6 +17,7 @@ export const parseSymbol: Walker = (parser: Parser): INode => {
 export const parseOperator: Walker = (parser: Parser): INode => {
   const token = parser.currentToken;
   parser.current++;
+
   return {
     type: NodeType.Operator,
     operator: token.value
@@ -24,14 +26,15 @@ export const parseOperator: Walker = (parser: Parser): INode => {
 
 export const parseValue: Walker = (parser: Parser): INode => {
   const token = parser.currentToken;
-  if (token.type === TokenType.VALUE) {
+  if (token.type === 'string' || token.type === 'number') {
     parser.current++;
+
     return {
       type: NodeType.Value,
       value: token.value
     } as IValueNode;
   }
-  
+
   throw 'something is wrong with the expression parser';
 };
 
@@ -41,16 +44,18 @@ export const parseFunctionCall: Walker = (parser: Parser): INode => {
   parser.current += 2; // skip name & (
   const args: IExpressionNode[] = [];
   // param1, param2, ...
-  while (!parser.currentToken.check(TokenType.SPECIAL, ')')) { // if there are no params it's already in )
+  // if there are no params it's already in )
+  while (!check(parser.currentToken, 'special', ')')) {
     const param = parseExpression(parser, ',', ')'); // no trailing commas >:)
     args.push(param);
-    if (parser.currentToken.check(TokenType.SPECIAL, ')')) break;
-    parser.current ++; // skip the special symbol
+    if (check(parser.currentToken, 'special', ')')) break;
+    parser.current++; // skip the special symbol
   }
-  parser.current ++; // skip )
+  parser.current++; // skip )
+
   return {
     type: NodeType.FunctionCall,
     name: functionName,
     args
   } as IFunctionCallNode;
-}
+};

@@ -1,33 +1,27 @@
+import chalk from 'chalk';
 import Evaluator from './evaluator/Evaluator';
 import Parser from './parser/Parser';
-import Tokenizer from './token/Tokenizer';
-import chalk from 'chalk';
+import { default as parseTokens, printTokens } from './token/Token';
 
 const devMode = process.argv[2] === 'dev';
 
 export default function parse(code: string, ...crbtScriptTags: [string, any][]): string {
   if (!crbtScriptTags.length) crbtScriptTags = [];
   const startingTime = Date.now();
-  const tokens = new Tokenizer(`<${code}>`, ...crbtScriptTags.map(v => v[0])).createTokens();
+  const tokens = parseTokens(`${code}`, ...crbtScriptTags.map(v => v[0]));
   if (devMode) console.log(chalk.grey(`Tokenized in ${Date.now() - startingTime}ms`));
-  if (devMode) console.log(tokens.map(v => v.toString()).join(''));
+  if (devMode) printTokens(tokens);
   const ast = new Parser(tokens).parse();
   if (devMode) console.log(chalk.grey(`Parsed in ${Date.now() - startingTime}ms`));
   const ret = new Evaluator(ast, ...crbtScriptTags).evaluate().value;
   if (devMode) console.log(chalk.grey(`Evaluated in ${Date.now() - startingTime}ms`));
+
   return ret;
 }
 
-export {default as Evaluator} from './evaluator/Evaluator';
-export {default as Parser} from './parser/Parser';
-export {default as Tokenizer} from './token/Tokenizer';
+export { default as Evaluator } from './evaluator/Evaluator';
+export { default as Parser } from './parser/Parser';
 
-/*console.log(parse("I'm dying at 3 PM + <1+<user.die(3 + 4, 5).tents.eat(3 + <4 + 5>)>+2> + hi + house + <user.die(3 + 4, 5).tents.eat(3 + <4 + 5>)>", ['user', {
-  name: 'John',
-  ban: () => console.log('hi'),
-  die: (a, b) => ({
-    tents: {
-      eat: (c) => a * b * c
-    }
-  })
-}]));*/
+console.log(parse("{user.name} has got {user.money} {server.currencyNamePlural}, he's kinda rich!! If you double it, that'd be {{user.money} * 2}!! WOW, even richer!!!",
+  ['user', { name: 'John', money: 300 }],
+  ['server', { currencyNamePlural: 'monies' }]));

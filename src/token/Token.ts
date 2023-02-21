@@ -1,80 +1,124 @@
 import chalk from 'chalk';
+import Tokenizr, { Token } from 'tokenizr';
 
-export let TokenRegex = {
-  VALUE: /$./, // this regex intentionally never matches, because string matching is already handled for in the tokenizer
-  TAG: /$./, // same thing
-  EMBEDDED: /^[\s]*<.*>/,
-  OPERATOR: /^[\s]*(?:[+\-\/*\^]|(?:<|>)=|[!]?[=])/,
-  OTHER: /^[\s]*(?:\,)/
-};
+export default function parse(code: string, ...tags: string[]): Token[] {
+  const lexer = new Tokenizr();
 
-export enum TokenType {
-  VALUE,
-  TAG,
-  SPECIAL,
-  OPERATOR,
-  OTHER
-}
+  lexer.rule(/[a-zA-Z_][a-zA-Z0-9_]*/, (ctx, match) => {
+    if (tags.includes(match[0])) ctx.accept('builtin');
+    else ctx.accept('identifier');
+  });
 
-export type Operator =
-  | '+'
-  | '-'
-  | '*'
-  | '/'
-  | '^'
-  | '='
-  | '!='
-  | '<'
-  | '>'
-  | '<='
-  | '>=';
+  lexer.rule(/(?:[+\-\/*\^]|(?:<|>)=|[!]?[=])/, ctx => {
+    ctx.accept('operator');
+  });
 
-export function getTokenTypeName(type: TokenType) {
-  const types = Object.keys(TokenType);
-  return types[type + types.length / 2] as string;
-}
+  lexer.rule(/(?:{|}|\(|\)|,|\.)/, ctx => {
+    ctx.accept('special');
+  });
 
-export class PositionalToken {
-  constructor(public token: Token, public start: number) {}
-}
+  lexer.rule(/-?[0-9][0-9_]*/, ctx => {
+    ctx.accept('number');
+  });
 
-export default class Token {
-  public type: TokenType;
-  public value: string;
+  lexer.rule(/-?(?:[0-9][0-9_]*)?\.[0-9][0-9_]*/, ctx => {
+    ctx.accept('number');
+  });
 
-  constructor(type: TokenType, value: string) {
-    this.type = type;
-    this.value = value;
-  }
+  lexer.rule(/[\s]+/, ctx => {
+    ctx.ignore();
+  });
 
-  public static colorToken(token: Token) {
-    switch (token.type) {
-      case TokenType.VALUE:
-        return chalk.greenBright;
-      case TokenType.SPECIAL:
-        return chalk.cyanBright;
-      case TokenType.OPERATOR:
-        return chalk.magentaBright;
-      case TokenType.TAG:
-        return chalk.yellowBright;
-      case TokenType.OTHER:
-        return chalk.blueBright;
+  let escapeMode = false;
+  const str: (string | Token[])[] = [];
+  for (let i = 0; i < code.length; i++) {
+    if (escapeMode) {
+      let thingToAdd = '';
+      switch (code[i]) {
+      case 'n':
+        thingToAdd = '\n';
+        break;
+      case 't':
+        thingToAdd = '\t';
+        break;
+      case 'r':
+        thingToAdd = '\r';
+        break;
+      case '\\':
+        thingToAdd = '\\';
+        break;
+      case '{':
+        thingToAdd = '{';
+        break;
+      default:
+        throw code[i];
+      }
+      if (typeof str[str.length - 1] === 'string') str[str.length - 1] += thingToAdd;
+      else str.push(thingToAdd);
+
+      escapeMode = false;
+      continue;
     }
+    if (code[i] === '\\') {
+      escapeMode = true;
+      continue;
+    }
+    if (code[i] === '{') {
+      let indentLevel = 1;
+      let parsedThing = code[i];
+      while (indentLevel !== 0) {
+        parsedThing += code[++i];
+        if (code[i] === '{') indentLevel++;
+        if (code[i] === '}') indentLevel--;
+      }
+      lexer.input(parsedThing);
+      str.push(lexer.tokens());
+      continue;
+    }
+    if (typeof str[str.length - 1] === 'string') str[str.length - 1] += code[i];
+    else str.push(code[i]);
   }
 
-  public check(type: TokenType, value?: string) {
-    return (this.type === type) && (value ? (this.value === value) : true);
+  const newStr: Token[] = [];
+  for (const item of str) {
+    if (typeof item === 'string') newStr.push(new Token('string', item, item));
+    else newStr.push(...item.slice(0, -1));
+
+    newStr.push(new Token('operator', '+', '+'));
   }
 
-  public checkArr(type: TokenType[], value?: string[]) {
-    return type.includes(this.type) && (value ? value.includes(this.value) : true);
-  }
+  return newStr.slice(0, -1);
+}
 
-  public pos(idx: number) {
-    return new PositionalToken(this, idx);
-  }
+type TokenType = 'number' | 'special' | 'operator' | 'identifier' | 'builtin' | 'string';
 
-  public toString(): string {
-    return `${Token.colorToken(this)(this.value)}`;
-  }
+export function check(token: Token, tokenType: TokenType, value?: string) {
+  return token.type === tokenType && (value ? token.value === value : true);
+}
+
+export function checkArr(token: Token, tokenType: TokenType[], value?: string[]) {
+  return tokenType.includes(token.type as TokenType) && (value ? value.includes(token.value) : true);
+}
+
+export function printTokens(tokens: Token[]) {
+  console.log(tokens
+    .map(token =>
+      ((token: Token) => {
+        switch (token.type) {
+        case 'number':
+          return chalk.greenBright;
+        case 'special':
+          return chalk.cyanBright;
+        case 'operator':
+          return chalk.magentaBright;
+        case 'identifier':
+          return chalk.yellowBright;
+        case 'builtin':
+          return chalk.redBright;
+        case 'string':
+          return chalk.blueBright;
+        }
+        throw token.type;
+      })(token)(token.text.trim()))
+    .join(''));
 }

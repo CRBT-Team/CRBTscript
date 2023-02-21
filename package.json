@@ -9,9 +9,11 @@
     "esbuild": "^0.14.23",
     "eslint": "^8.9.0",
     "ora": "^6.1.2",
-    "prettier": "^2.5.1"
+    "prettier": "^2.5.1",
+    "tokenizr": "^1.6.8"
   },
   "devDependencies": {
-    "@types/node": "^18.6.2"
+    "@types/node": "^18.6.2",
+    "@typescript-eslint/eslint-plugin": "^5.53.0"
   }
 }

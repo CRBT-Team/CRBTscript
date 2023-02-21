@@ -1,7 +1,6 @@
-import Token from '../token/Token';
-import INode, { IDotAccessNode, ITopNode, NodeType } from './INode';
+import { Token } from 'tokenizr';
+import INode, { ITopNode, NodeType } from './INode';
 import { expressionWalker } from './walker/Expression';
-// import { defaultWalker } from "./defaultWalker";
 
 export default class Parser {
   public tokens: Token[];
@@ -30,7 +29,7 @@ export default class Parser {
 
   public parse(): ITopNode {
     this.current = 0;
-    let ast = {
+    const ast = {
       type: NodeType.Program,
       body: []
     } as ITopNode;
