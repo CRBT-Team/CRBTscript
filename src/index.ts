@@ -21,7 +21,5 @@ export default function parse(code: string, ...crbtScriptTags: [string, any][]):
 
 export { default as Evaluator } from './evaluator/Evaluator';
 export { default as Parser } from './parser/Parser';
+export { default as tokenize } from './token/Token';
 
-console.log(parse("{user.name} has got {user.money} {server.currencyNamePlural}, he's kinda rich!! If you double it, that'd be {{user.money} * 2}!! WOW, even richer!!!",
-  ['user', { name: 'John', money: 300 }],
-  ['server', { currencyNamePlural: 'monies' }]));
