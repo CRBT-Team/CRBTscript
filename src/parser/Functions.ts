@@ -13,7 +13,7 @@ export function parseExpression(parser: Parser, ...delims: Delimiter[]): IExpres
   } as IExpressionNode;
 
   while (!checkArr(parser.currentToken, ['special'], delims)) expression.expr.push(expressionWalker(parser));
-
+  
   return expression;
 }
 

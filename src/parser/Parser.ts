@@ -15,6 +15,10 @@ export default class Parser {
     console.log(this.next(-1).toString(), this.currentToken.toString(), this.next().toString());
   }
 
+  public canIncrement(factor = 1) {
+    return this.current < this.tokens.length - factor;
+  }
+
   public next(factor = 1) {
     return this.tokens[this.current + factor];
   }

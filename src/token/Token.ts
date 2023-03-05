@@ -5,11 +5,12 @@ export default function parse(code: string, ...tags: string[]): Token[] {
   const lexer = new Tokenizr();
 
   lexer.rule(/[a-zA-Z_][a-zA-Z0-9_]*/, (ctx, match) => {
-    if (tags.includes(match[0])) ctx.accept('builtin');
+    if (['if', 'elif', 'else', 'endif'].includes(match[0])) ctx.accept('if keyword');
+    else if (tags.includes(match[0])) ctx.accept('builtin');
     else ctx.accept('identifier');
   });
 
-  lexer.rule(/(?:[+\-\/*\^]|(?:<|>)=|[!]?[=])/, ctx => {
+  lexer.rule(/(?:[+\-/*^]|(?:<|>)=|[!]?[=])/, ctx => {
     ctx.accept('operator');
   });
 
@@ -30,6 +31,7 @@ export default function parse(code: string, ...tags: string[]): Token[] {
   });
 
   let escapeMode = false;
+  // string | Token[] is value, boolean is whether to omit operator
   const str: (string | Token[])[] = [];
   for (let i = 0; i < code.length; i++) {
     if (escapeMode) {
@@ -72,25 +74,55 @@ export default function parse(code: string, ...tags: string[]): Token[] {
         if (code[i] === '}') indentLevel--;
       }
       lexer.input(parsedThing);
-      str.push(lexer.tokens());
+      const tokens = lexer.tokens();
+      str.push(tokens);
       continue;
     }
     if (typeof str[str.length - 1] === 'string') str[str.length - 1] += code[i];
     else str.push(code[i]);
   }
 
-  const newStr: Token[] = [];
+  let newStr: (Token | Token[])[] = [];
   for (const item of str) {
     if (typeof item === 'string') newStr.push(new Token('string', item, item));
-    else newStr.push(...item.slice(0, -1));
-
+    else newStr.push(item.slice(0, -1));
     newStr.push(new Token('operator', '+', '+'));
   }
+  newStr = newStr.slice(0, -1);
 
-  return newStr.slice(0, -1);
+  function isArray<T>(value: T | T[]): boolean {
+    return Object.prototype.toString.call(value) === '[object Array]';
+  }
+
+  function isSpecial(token: Token | Token[]): boolean {
+    if (!isArray(token)) return false;
+    const arr = token as Token[];
+    
+    return (arr.length > 1 && arr[1].isA('if keyword'));
+  }
+
+  function isOperatorPlus(token: Token | Token[]): boolean {
+    if (isArray(token)) return false;
+    
+    return ((token as Token).isA('operator', '+'));
+  }
+
+  for (let i = 0; i < newStr.length; i++)
+    if (isSpecial(newStr[i])) {
+      if (i !== newStr.length - 1) if (isOperatorPlus(newStr[i + 1])) newStr.splice(i + 1, 1);
+      if (i !== 0) if (isOperatorPlus(newStr[i - 1])) newStr.splice(i - 1, 1);
+    }
+
+  const retStr: Token[] = [];
+  
+  for (const item of newStr) 
+    if (isArray(item)) retStr.push(...item as Token[]);
+    else retStr.push(item as Token);
+  
+  return retStr;
 }
 
-type TokenType = 'number' | 'special' | 'operator' | 'identifier' | 'builtin' | 'string';
+type TokenType = 'number' | 'special' | 'if keyword' | 'operator' | 'identifier' | 'builtin' | 'string';
 
 export function check(token: Token, tokenType: TokenType, value?: string) {
   return token.type === tokenType && (value ? token.value === value : true);
@@ -109,6 +141,8 @@ export function printTokens(tokens: Token[]) {
           return chalk.greenBright;
         case 'special':
           return chalk.cyanBright;
+        case 'if keyword':
+          return chalk.whiteBright;
         case 'operator':
           return chalk.magentaBright;
         case 'identifier':

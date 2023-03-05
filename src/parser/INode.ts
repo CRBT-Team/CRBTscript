@@ -13,6 +13,7 @@ export enum NodeType {
   Operator,
   FunctionCall,
   DotAccess,
+  ConditionalStmt,
   NullNode
 }
 
@@ -48,4 +49,10 @@ export interface IFunctionCallNode extends INode {
 export interface IDotAccessNode extends INode {
   accessee: ISymbolNode | IFunctionCallNode | IDotAccessNode;
   prop: ISymbolNode | IFunctionCallNode;
+}
+
+export interface IConditionalStmtNode extends INode {
+  condition: IExpressionNode;
+  trueBranch: IExpressionNode;
+  elseBranch?: IConditionalStmtNode | IExpressionNode;
 }

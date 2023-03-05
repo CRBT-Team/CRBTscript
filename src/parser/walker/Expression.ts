@@ -1,6 +1,7 @@
 import { Token } from 'tokenizr';
+import { check } from '../../token/Token';
 import { parseDotAccess, parseExpression } from '../Functions';
-import INode, { NodeType } from '../INode';
+import INode, { IConditionalStmtNode, IExpressionNode, NodeType } from '../INode';
 import Parser from '../Parser';
 import { parseOperator, parseValue } from './LowLevel';
 import { Walker } from './Walker';
@@ -21,6 +22,61 @@ export const expressionWalker: Walker = (parser: Parser): INode => {
     // an operator
   case 'operator':
     return parseOperator(parser);
+
+    // if statement
+    // this is a bit weird because we're parsing an expression which has
+    // `if <condition>} <whatever> {endif` inside, but it's probably fine
+  case 'if keyword':
+    if (token.value === 'if') {
+      // skip the if keyword
+      parser.current++;
+      // get the expression after it
+      const condition = parseExpression(parser, '}');
+
+      // skip the }
+      parser.current++;
+
+      // parse until next non-expr { which should be ours for now
+      const trueBranch = {
+        type: NodeType.Expression,
+        expr: []
+      } as IExpressionNode;
+
+      // this function is here because it's very specific to if statements
+      // eslint-disable-next-line no-inner-declarations
+      function conditionForIfKeyword(ifKeyword: string) {
+        return !(
+          (parser.canIncrement(1) ? check(parser.next(1), 'special', '{') : true) &&
+            (parser.canIncrement(2) ? check(parser.next(2), 'if keyword', ifKeyword) : true)
+        );
+      }
+
+      while (conditionForIfKeyword('endif')) trueBranch.expr.push(expressionWalker(parser));
+
+      // skip the { before the next if keyword
+      parser.current++;
+      parser.current++;
+      if (!parser.currentToken.isA('if keyword'))
+        throw `somehow this isn't an if keyword, something is very wrong (found ${parser.currentToken})`;
+
+      switch (parser.currentToken.text) {
+      case 'endif':
+        // skip endif
+        parser.current++;
+        // do NOT skip closing bracket
+
+        return {
+          type: NodeType.ConditionalStmt,
+          condition,
+          trueBranch
+        } as IConditionalStmtNode;
+      default:
+        // TODO: parse elif and else clauses similarly to above
+        throw `unhandled if keyword ${parser.currentToken.text}`;
+      }
+    } else {
+      throw "we got to a non-if if keyword (shouldn't happen)";
+    }
 
     // sub-expressions and arrays
   case 'special':

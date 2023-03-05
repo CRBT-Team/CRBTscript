@@ -1,4 +1,12 @@
-import { getNodeTypeName, IExpressionNode, IOperatorNode, IValueNode, NodeType, Operator } from '../parser/INode';
+import {
+  getNodeTypeName,
+  IConditionalStmtNode,
+  IExpressionNode,
+  IOperatorNode,
+  IValueNode,
+  NodeType,
+  Operator
+} from '../parser/INode';
 
 export default class ExpressionEvaluator {
   private static operatorPriorities: Operator[][] = [['^'], ['*', '/'], ['+', '-'], ['=', '<=', '>=', '!=']];
@@ -57,7 +65,7 @@ export default class ExpressionEvaluator {
       val = exprValue1 ** exprValue2;
       break;
     default:
-      throw `Invalid operator: \'${operator.operator}\'.`;
+      throw `Invalid operator: '${operator.operator}'.`;
     }
 
     return {
@@ -80,12 +88,14 @@ export default class ExpressionEvaluator {
   }
 
   public static evaluateExpressionNode(expr: IExpressionNode): IValueNode {
-    const expr2: (IValueNode | IOperatorNode)[] = expr.expr.map(v =>
+    const expr2: (IConditionalStmtNode | IValueNode | IOperatorNode)[] = expr.expr.map(v =>
       (v.type === NodeType.Expression
         ? this.evaluateExpressionNode(v as IExpressionNode)
         : v.type === NodeType.Operator
           ? (v as IOperatorNode)
-          : (v as IValueNode)));
+          : v.type === NodeType.ConditionalStmt
+            ? (v as IConditionalStmtNode)
+            : (v as IValueNode)));
     const isNumberExpr = expr2
       .filter(v => v.type === NodeType.Value)
       .every(v => !isNaN(parseFloat((v as IValueNode).value)));
@@ -94,8 +104,11 @@ export default class ExpressionEvaluator {
 
     let nextOperatorIndex: number | null;
 
+    // TODO: evaluate if statements
+
+    // eslint-disable-next-line no-constant-condition
     while (true) {
-      nextOperatorIndex = this.searchForNextOperator(this.operatorPriorities[currentPriorityLevel], expr2);
+      nextOperatorIndex = this.searchForNextOperator(this.operatorPriorities[currentPriorityLevel], expr2 as (IValueNode | IOperatorNode)[]);
       if (nextOperatorIndex !== null) {
         if (!(nextOperatorIndex > 0 && nextOperatorIndex < expr2.length - 1))
           throw 'The operator is at an invalid position in an expression';

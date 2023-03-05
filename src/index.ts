@@ -23,3 +23,4 @@ export { default as Evaluator } from './evaluator/Evaluator';
 export { default as Parser } from './parser/Parser';
 export { default as tokenize } from './token/Token';
 
+console.log(parse('{if 3 + 4 = 7} Hello {3 + 4} is seven {endif}'));

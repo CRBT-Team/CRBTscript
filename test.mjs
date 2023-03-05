@@ -57,3 +57,7 @@ test('actual real-life example', () => {
 test('escape sequences', () => {
   expect(parse("\\n\\\\n\\\\\\{hi{3+4}")).toBe("\n\\n\\{hi7");
 });
+test('basic if statements', () => {
+  expect(parse("{if 3 + 4 = 7} Hello {endif}")).toBe("Hello");
+});
+
